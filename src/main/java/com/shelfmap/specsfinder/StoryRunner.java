@@ -66,6 +66,16 @@ public abstract class StoryRunner extends JUnitStories {
         addSteps(createSteps(configuration()));
         super.run();
     }
+    
+    /**
+     * Subclasses must override this method.
+     * The overriding method must return a classpath where searching specs files start from.<br>
+     * The path must be the path of a package.
+     * <p>
+     * ex) "my.class.path.for.search"
+     * @return a classpath string, where searching specs files start from.
+     */
+    protected abstract String classpathForSearch();
 
     protected List<CandidateSteps> createSteps(Configuration configuration) throws IOException, URISyntaxException, InstantiationException, IllegalAccessException {
         return new InstanceStepsFactory(configuration, createStepsInstances()).createCandidateSteps();
@@ -86,10 +96,11 @@ public abstract class StoryRunner extends JUnitStories {
     
     private List<Class<?>> findStepsClasses() throws IOException, URISyntaxException {
         FileClassLoader loader = new FileClassLoader(getClass().getClassLoader());
-        URL url = getClass().getResource("");
-        File current = new File(url.toURI());
+        URL rootUrl = loader.getResource("");
+        File startDirectory = new File(new File(rootUrl.toURI()), classpathForSearch().replace('.', '/'));
+        
         @SuppressWarnings("unchecked")
-        Iterator<File> fileIterator = FileUtils.iterateFiles(current, new String[]{"class"}, true);
+        Iterator<File> fileIterator = FileUtils.iterateFiles(startDirectory, new String[]{"class"}, true);
         List<Class<?>> stepClasses = new ArrayList<Class<?>>();
          
         while(fileIterator.hasNext()) {
