@@ -24,10 +24,12 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 import org.apache.commons.io.FileUtils;
+import org.apache.commons.io.filefilter.IOFileFilter;
+import org.apache.commons.io.filefilter.RegexFileFilter;
+import org.apache.commons.io.filefilter.TrueFileFilter;
 import org.apache.commons.lang.StringUtils;
 import org.jbehave.core.configuration.Configuration;
 import org.jbehave.core.configuration.MostUsefulConfiguration;
-import static org.jbehave.core.io.CodeLocations.*;
 import org.jbehave.core.io.StoryFinder;
 import org.jbehave.core.junit.JUnitStories;
 import org.jbehave.core.reporters.StoryReporterBuilder;
@@ -44,6 +46,9 @@ import org.junit.Test;
  */
 public abstract class StoryRunner extends JUnitStories {
 
+    private boolean recursive = true;
+    private String regularExpression = ".*\\.class";
+    
     public StoryRunner() throws IOException, URISyntaxException, InstantiationException, IllegalAccessException {
         super();
         Configuration configuration = new MostUsefulConfiguration()
@@ -65,6 +70,16 @@ public abstract class StoryRunner extends JUnitStories {
     public void run() throws Throwable {
         addSteps(createSteps(configuration()));
         super.run();
+    }
+    
+    public StoryRunner recursive(boolean isRecursive) {
+        this.recursive = isRecursive;
+        return this;
+    }
+    
+    public StoryRunner regularExpression(String regex) {
+        this.regularExpression = regex;
+        return this;
     }
     
     /**
@@ -99,8 +114,11 @@ public abstract class StoryRunner extends JUnitStories {
         URL rootUrl = loader.getResource("");
         File startDirectory = new File(new File(rootUrl.toURI()), classpathForSearch().replace('.', '/'));
         
+        IOFileFilter dirFileFilter = recursive ? TrueFileFilter.INSTANCE : null;
+        IOFileFilter fileFileFilter = new RegexFileFilter(regularExpression);
+        
         @SuppressWarnings("unchecked")
-        Iterator<File> fileIterator = FileUtils.iterateFiles(startDirectory, new String[]{"class"}, true);
+        Iterator<File> fileIterator = FileUtils.iterateFiles(startDirectory, fileFileFilter, dirFileFilter);
         List<Class<?>> stepClasses = new ArrayList<Class<?>>();
          
         while(fileIterator.hasNext()) {
@@ -116,10 +134,13 @@ public abstract class StoryRunner extends JUnitStories {
     @Override
     protected List<String> storyPaths() {
         try {
-            URL search = codeLocationFromClass(this.getClass());
-            String searchPath = new File(search.toURI()).getAbsolutePath();
-            String include = StringUtils.removeStart(fullPathForDirectoryOfClass(this.getClass()) + "/**/*.story", searchPath + "/");
-            List<String> storyPaths = new StoryFinder().findPaths(search, include, "");
+            FileClassLoader loader = new FileClassLoader(getClass().getClassLoader());
+            URL rootUrl = loader.getResource("");
+            String rootPath = new File(rootUrl.toURI()).getAbsolutePath();
+            File startDirectory = new File(new File(rootUrl.toURI()), classpathForSearch().replace('.', '/'));
+        
+            String include = StringUtils.removeStart(startDirectory.getAbsolutePath() + "/**/*.story", rootPath + "/");
+            List<String> storyPaths = new StoryFinder().findPaths(rootUrl, include, "");
             return storyPaths;
         } catch (URISyntaxException ex) {
             throw new IllegalStateException("the location where classes exist is not on a file system. This class is aplicable only for classes on any filesystem.");
