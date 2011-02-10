@@ -27,11 +27,11 @@ import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.filefilter.IOFileFilter;
 import org.apache.commons.io.filefilter.RegexFileFilter;
 import org.apache.commons.io.filefilter.TrueFileFilter;
-import org.apache.commons.lang.StringUtils;
 import org.jbehave.core.configuration.Configuration;
 import org.jbehave.core.configuration.MostUsefulConfiguration;
-import org.jbehave.core.io.StoryFinder;
-import org.jbehave.core.junit.JUnitStories;
+import org.jbehave.core.io.CasePreservingResolver;
+import org.jbehave.core.io.StoryPathResolver;
+import org.jbehave.core.junit.JUnitStory;
 import org.jbehave.core.reporters.StoryReporterBuilder;
 import org.jbehave.core.steps.CandidateSteps;
 import org.jbehave.core.steps.InstanceStepsFactory;
@@ -44,17 +44,19 @@ import org.junit.Test;
  *
  * @author Tsutomu YANO
  */
-public abstract class StoryRunner extends JUnitStories {
+public abstract class StoryRunner extends JUnitStory {
 
-    private boolean recursive = true;
-    private String regularExpression = ".*\\.class";
+    private boolean recursive;
+    private String regularExpression;
     
     public StoryRunner() throws IOException, URISyntaxException, InstantiationException, IllegalAccessException {
         super();
+        StoryPathResolver storyPathResolver = new CasePreservingResolver(".story");
         Configuration configuration = new MostUsefulConfiguration()
             .useStoryReporterBuilder(new StoryReporterBuilder()
                 .withFormats(CONSOLE, IDE_CONSOLE, HTML).withDefaultFormats())
-            .useParameterConverters(new ParameterConverters().addConverters(new MyDateConverter()));
+            .useParameterConverters(new ParameterConverters().addConverters(new MyDateConverter()))
+            .useStoryPathResolver(storyPathResolver);
         
         useConfiguration(configuration);
         
@@ -63,6 +65,11 @@ public abstract class StoryRunner extends JUnitStories {
                 .doGenerateViewAfterStories(true)
                 .doIgnoreFailureInStories(true)
                 .doIgnoreFailureInView(false);
+        
+        this.recursive = false;
+        this.regularExpression = this.getClass().getSimpleName() + "Steps\\.class";
+        
+        
     }
     
     @Test
@@ -129,22 +136,6 @@ public abstract class StoryRunner extends JUnitStories {
             }
         }
         return stepClasses;
-    }
-
-    @Override
-    protected List<String> storyPaths() {
-        try {
-            FileClassLoader loader = new FileClassLoader(getClass().getClassLoader());
-            URL rootUrl = loader.getResource("");
-            String rootPath = new File(rootUrl.toURI()).getAbsolutePath();
-            File startDirectory = new File(new File(rootUrl.toURI()), classpathForSearch().replace('.', '/'));
-        
-            String include = StringUtils.removeStart(startDirectory.getAbsolutePath() + "/**/*.story", rootPath + "/");
-            List<String> storyPaths = new StoryFinder().findPaths(rootUrl, include, "");
-            return storyPaths;
-        } catch (URISyntaxException ex) {
-            throw new IllegalStateException("the location where classes exist is not on a file system. This class is aplicable only for classes on any filesystem.");
-        }
     }
 
     public static class MyDateConverter extends DateConverter {
