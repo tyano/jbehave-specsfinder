@@ -18,7 +18,6 @@ package com.shelfmap.specsfinder;
 import java.io.File;
 import java.io.IOException;
 import java.net.URISyntaxException;
-import java.net.URL;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Iterator;
@@ -67,7 +66,7 @@ public abstract class StoryRunner extends JUnitStory {
                 .doIgnoreFailureInView(false);
         
         this.recursive = false;
-        this.regularExpression = this.getClass().getSimpleName() + "Steps\\.class";
+        this.regularExpression = this.getClass().getSimpleName() + ".*Steps\\.class";
         
         
     }
@@ -88,16 +87,6 @@ public abstract class StoryRunner extends JUnitStory {
         this.regularExpression = regex;
         return this;
     }
-    
-    /**
-     * Subclasses must override this method.
-     * The overriding method must return a classpath where searching specs files start from.<br>
-     * The path must be the path of a package.
-     * <p>
-     * ex) "my.class.path.for.search"
-     * @return a classpath string, where searching specs files start from.
-     */
-    protected abstract String classpathForSearch();
 
     protected List<CandidateSteps> createSteps(Configuration configuration) throws IOException, URISyntaxException, InstantiationException, IllegalAccessException {
         return new InstanceStepsFactory(configuration, createStepsInstances()).createCandidateSteps();
@@ -109,17 +98,11 @@ public abstract class StoryRunner extends JUnitStory {
             instances.add(clazz.newInstance());
         }
         return instances;
-    }
-    
-    private String fullPathForDirectoryOfClass(Class<?> clazz) throws URISyntaxException {
-        URL url = clazz.getResource("");
-        return new File(url.toURI()).getAbsolutePath();
-    }    
+    }  
     
     private List<Class<?>> findStepsClasses() throws IOException, URISyntaxException {
         FileClassLoader loader = new FileClassLoader(getClass().getClassLoader());
-        URL rootUrl = loader.getResource("");
-        File startDirectory = new File(new File(rootUrl.toURI()), classpathForSearch().replace('.', '/'));
+        File startDirectory = new File(getClass().getResource("").toURI());
         
         IOFileFilter dirFileFilter = recursive ? TrueFileFilter.INSTANCE : null;
         IOFileFilter fileFileFilter = new RegexFileFilter(regularExpression);
