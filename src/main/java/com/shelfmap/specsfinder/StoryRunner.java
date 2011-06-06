@@ -48,7 +48,7 @@ public abstract class StoryRunner extends JUnitStory {
     private boolean recursive;
     private String regularExpression;
     
-    public StoryRunner() throws IOException, URISyntaxException, InstantiationException, IllegalAccessException {
+    public StoryRunner() {
         super();
         StoryPathResolver storyPathResolver = new CasePreservingResolver(".story");
         Configuration configuration = new MostUsefulConfiguration()
@@ -67,8 +67,6 @@ public abstract class StoryRunner extends JUnitStory {
         
         this.recursive = false;
         this.regularExpression = this.getClass().getSimpleName() + ".*Steps\\.class";
-        
-        
     }
     
     @Test
@@ -121,8 +119,7 @@ public abstract class StoryRunner extends JUnitStory {
         return stepClasses;
     }
 
-    public static class MyDateConverter extends DateConverter {
-
+    private static class MyDateConverter extends DateConverter {
         public MyDateConverter() {
             super(new SimpleDateFormat("yyyy-MM-dd"));
         }
