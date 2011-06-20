@@ -35,7 +35,7 @@ import org.jbehave.core.reporters.StoryReporterBuilder;
 import org.jbehave.core.steps.CandidateSteps;
 import org.jbehave.core.steps.InstanceStepsFactory;
 import org.jbehave.core.steps.ParameterConverters;
-import static org.jbehave.core.reporters.StoryReporterBuilder.Format.*;
+import org.jbehave.core.reporters.StoryReporterBuilder.Format;
 import org.jbehave.core.steps.ParameterConverters.DateConverter;
 import org.junit.Test;
 
@@ -53,7 +53,7 @@ public abstract class StoryRunner extends JUnitStory {
         StoryPathResolver storyPathResolver = new CasePreservingResolver(".story");
         Configuration configuration = new MostUsefulConfiguration()
             .useStoryReporterBuilder(new StoryReporterBuilder()
-                .withFormats(CONSOLE, IDE_CONSOLE, HTML).withDefaultFormats())
+                .withFormats(Format.CONSOLE, Format.IDE_CONSOLE, Format.HTML).withDefaultFormats())
             .useParameterConverters(new ParameterConverters().addConverters(new MyDateConverter()))
             .useStoryPathResolver(storyPathResolver);
         
