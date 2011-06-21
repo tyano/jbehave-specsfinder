@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.shelfmap.specsfinder;
+package com.shelfmap.stepsfinder;
 
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
