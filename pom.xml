@@ -5,11 +5,20 @@
 
     <groupId>com.shelfmap</groupId>
     <artifactId>jbehave-stepsfinder</artifactId>
-    <version>3.1.2-SNAPSHOT</version>
+    <version>3.4.5-SNAPSHOT</version>
     <packaging>jar</packaging>
 
     <name>jbehave-stepsfinder</name>
     <url>http://maven.apache.org</url>
+    
+    <licenses>
+        <license>
+            <name>The Apache Software License, Version 2.0</name>
+            <url>http://www.apache.org/licenses/LICENSE-2.0.txt</url>
+            <distribution>repo</distribution>
+        </license>
+    </licenses>
+    
     <build>
         <plugins>
             <plugin>
@@ -39,6 +48,11 @@
             <groupId>org.jbehave</groupId>
             <artifactId>jbehave-core</artifactId>
             <version>3.4.5</version>
+        </dependency>
+        <dependency>
+            <groupId>org.slf4j</groupId>
+            <artifactId>slf4j-api</artifactId>
+            <version>1.6.1</version>
         </dependency>
     </dependencies>
 </project>
