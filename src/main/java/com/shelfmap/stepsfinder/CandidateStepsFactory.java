@@ -33,11 +33,11 @@ import org.slf4j.LoggerFactory;
  */
 public class CandidateStepsFactory {
     private static final Logger LOGGER = LoggerFactory.getLogger(CandidateStepsFactory.class);
-    
+
     private CandidateStepsFactory() {
         super();
     }
-    
+
     public static URL codeLocationFromParentPackage(Class<?> codeLocationClass) {
         String simpleName = codeLocationClass.getSimpleName() + ".class";
         String pathOfClass = codeLocationClass.getName().replace(".", "/") + ".class";
@@ -50,8 +50,8 @@ public class CandidateStepsFactory {
         String classPath = codeLocationClass.getName().replace(".", "/");
         return removeEnd(classPath, codeLocationClass.getSimpleName());
     }
-    
-    public static List<Object> createStepsInstances(Class<?> embedderClass) {
+
+    public static List<Class<?>> findStepsClasses(Class<?> embedderClass) {
         final String classPath = packagePath(embedderClass);
         List<String> paths = new StoryFinder().findPaths(
                 codeLocationFromParentPackage(embedderClass).getFile(),
@@ -65,22 +65,32 @@ public class CandidateStepsFactory {
             }
         });
 
-        List<Object> steps = new ArrayList<Object>();
+        List<Class<?>> classes = new ArrayList<Class<?>>();
         for (String path : paths) {
-            Class<?> clazz = null;
+            final String className = path.replace("/", ".");
             try {
-                clazz = Class.forName(path.replace("/", "."));
+                Class<?> clazz = Class.forName(className);
                 if(clazz.isAnnotationPresent(Steps.class)) {
-                    steps.add(clazz.newInstance());
+                    classes.add(clazz);
                 }
+            } catch (ClassNotFoundException ex) {
+                LOGGER.error("Could not load the class: " + className);
+            }
+        }
+        return classes;
+    }
+
+    public static List<Object> createStepsInstances(Class<?> embedderClass) {
+        List<Object> steps = new ArrayList<Object>();
+        for (Class<?> clazz : findStepsClasses(embedderClass)) {
+            try {
+                steps.add(clazz.newInstance());
             } catch (InstantiationException ex) {
                 LOGGER.error("Could not instanciate a class: " + clazz.getCanonicalName(), ex);
             } catch (IllegalAccessException ex) {
                 LOGGER.error("Could not access ot the constructer of the class: " + clazz.getCanonicalName(), ex);
-            } catch (ClassNotFoundException ex) {
-                LOGGER.error("Cound not load a class of path: " + path, ex);
             }
         }
-        return steps;        
+        return steps;
     }
 }

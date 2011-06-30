@@ -15,7 +15,6 @@
  */
 package com.shelfmap.stepsfinder;
 
-import java.lang.reflect.Type;
 import java.text.SimpleDateFormat;
 import org.jbehave.core.steps.ParameterConverters.DateConverter;
 
